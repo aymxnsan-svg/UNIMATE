@@ -150,7 +150,7 @@
     .toast.show{opacity:1;transform:translateY(0);}
     footer{border-top:1px solid var(--border);text-align:center;padding:24px;color:var(--muted);font-size:0.8rem;}
     footer b{background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    @media(max-width:900px){.admin-sidebar{display:none;}.admin-main{margin-left:0;}.content-wrap{padding:24px 20px 60px;}.form-grid{grid-template-columns:1fr;}.reply-area{flex-direction:column;}.fb-banner{left:0;}}
+    /* MOBILE NAV */ .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:600;background:rgba(6,14,35,0.97);backdrop-filter:blur(24px);border-top:1px solid var(--border);padding:8px 0;flex-direction:row;justify-content:space-around;} .mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border:none;background:none;color:var(--muted);font-family:"Plus Jakarta Sans",sans-serif;font-size:0.62rem;font-weight:600;cursor:pointer;border-radius:10px;transition:all 0.18s;} .mob-nav-item:hover,.mob-nav-item.active{color:var(--gold);} .mob-nav-icon{font-size:1.3rem;} .mob-badge{background:var(--danger);color:#fff;font-size:0.55rem;font-weight:800;padding:1px 5px;border-radius:100px;position:absolute;top:-2px;right:-4px;display:none;} .mob-badge.show{display:inline-block;} .mob-icon-wrap{position:relative;display:inline-block;} @media(max-width:900px){.admin-sidebar{display:none;}.admin-main{margin-left:0;}.content-wrap{padding:24px 20px 90px;}.form-grid{grid-template-columns:1fr;}.reply-area{flex-direction:column;}.fb-banner{left:0;}.mob-nav{display:flex;}}
   </style>
 </head>
 <body>
@@ -303,6 +303,15 @@
     </div>
   </div>
 </div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-nav" id="mobNav">
+  <button class="mob-nav-item active" id="mbDash" onclick="showAdminPage('dashboard');setMobActive(this)"><span class="mob-nav-icon">📊</span><span>Dashboard</span></button>
+  <button class="mob-nav-item" id="mbServices" onclick="showAdminPage('services');setMobActive(this)"><span class="mob-nav-icon">📦</span><span>Services</span></button>
+  <button class="mob-nav-item" id="mbComplaints" onclick="showAdminPage('complaints');setMobActive(this)"><div class="mob-icon-wrap"><span class="mob-nav-icon">📬</span><span class="mob-badge" id="mobBadge"></span></div><span>Complaints</span></button>
+  <button class="mob-nav-item" id="mbUsers" onclick="showAdminPage('users');setMobActive(this)"><span class="mob-nav-icon">👥</span><span>Users</span></button>
+  <a href="index.html" class="mob-nav-item"><span class="mob-nav-icon">🌐</span><span>Site</span></a>
+</nav>
 
 <div class="toast" id="toast"></div>
 
@@ -658,6 +667,23 @@ var _ols = document.querySelectorAll('.overlay');
 for (var _i=0;_i<_ols.length;_i++) {
   _ols[_i].addEventListener('click', function(e) { if(e.target===this) this.classList.remove('open'); });
 }
+
+/* Mobile bottom nav active state */
+function setMobActive(btn) {
+  var items = document.querySelectorAll('.mob-nav-item');
+  for (var i=0;i<items.length;i++) items[i].classList.remove('active');
+  btn.classList.add('active');
+}
+
+/* Sync mobile complaint badge with desktop badge */
+var _origUpdateBadge = updatePendingBadge;
+updatePendingBadge = function() {
+  _origUpdateBadge();
+  var count = 0;
+  for (var i=0;i<window._COMPLAINTS.length;i++) { if(window._COMPLAINTS[i].status==='pending') count++; }
+  var mb = document.getElementById('mobBadge');
+  if (mb) { mb.textContent=count; if(count>0) mb.classList.add('show'); else mb.classList.remove('show'); }
+};
 
 function showToast(msg) {
   var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
