@@ -578,15 +578,43 @@ function renderUsers() {
   wrap.innerHTML=html;
 }
 
-/* IMAGE */
+/* IMAGE — compress to max 800px wide, quality 0.75, keeps under Firestore 1MB limit */
 function handleImg(input, prevId, zoneId, dataId) {
-  var file=input.files[0]; if(!file) return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    document.getElementById(dataId).value=e.target.result;
-    var img=document.getElementById(prevId).querySelector('img'); if(img) img.src=e.target.result;
-    document.getElementById(prevId).style.display='block';
-    document.getElementById(zoneId).style.display='none';
+  var file = input.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var original = new Image();
+    original.onload = function() {
+      /* Resize canvas */
+      var MAX = 800;
+      var w = original.width;
+      var h = original.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+
+      var canvas = document.createElement('canvas');
+      canvas.width  = w;
+      canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(original, 0, 0, w, h);
+
+      /* Compress — try quality 0.75, if still too big try 0.5 */
+      var compressed = canvas.toDataURL('image/jpeg', 0.75);
+      if (compressed.length > 900000) {
+        compressed = canvas.toDataURL('image/jpeg', 0.5);
+      }
+      if (compressed.length > 900000) {
+        compressed = canvas.toDataURL('image/jpeg', 0.35);
+      }
+
+      document.getElementById(dataId).value = compressed;
+      var imgEl = document.getElementById(prevId).querySelector('img');
+      if (imgEl) imgEl.src = compressed;
+      document.getElementById(prevId).style.display = 'block';
+      document.getElementById(zoneId).style.display = 'none';
+    };
+    original.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
