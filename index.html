@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Unimate – Student Marketplace</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#060e1f;--gold:#f5c842;--gold2:#f59e0b;--text:#eef4ff;--muted:rgba(180,210,255,0.55);--glass:rgba(255,255,255,0.055);--border:rgba(255,255,255,0.11);--green:#4ade80;--red:#ff6b6b;--radius:18px;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+    .bg-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+    .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.35;animation:drift 22s ease-in-out infinite alternate;}
+    .orb1{width:700px;height:700px;background:radial-gradient(circle,#1d4ed8,#0a1628);top:-200px;left:-150px;}
+    .orb2{width:500px;height:500px;background:radial-gradient(circle,#f5c842,#b45309);top:15%;right:-150px;opacity:0.14;animation-duration:28s;animation-delay:-10s;}
+    .orb3{width:400px;height:400px;background:radial-gradient(circle,#1e40af,#060e1f);bottom:0;left:30%;animation-duration:24s;animation-delay:-5s;}
+    @keyframes drift{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,22px) scale(1.07);}}
+    .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:60px 60px;}
+    .page{position:relative;z-index:1;}
+    nav{display:flex;align-items:center;justify-content:space-between;padding:16px 40px;position:sticky;top:0;z-index:100;background:rgba(6,14,31,0.65);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);}
+    .nav-left{display:flex;align-items:center;gap:16px;}
+    .hamburger{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:4px;}
+    .hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;}
+    .logo{font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;}
+    .nav-right{display:flex;align-items:center;gap:8px;}
+    .nav-logged{display:none;align-items:center;gap:10px;}
+    .nav-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;color:#060e1f;cursor:pointer;flex-shrink:0;}
+    .nav-username{font-size:0.84rem;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .inbox-btn{position:relative;background:var(--glass);border:1px solid var(--border);border-radius:100px;padding:8px 14px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;}
+    .inbox-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;background:var(--red);border-radius:50%;display:none;}
+    .inbox-dot.show{display:block;}
+    .btn{padding:9px 22px;border-radius:100px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.87rem;font-weight:600;cursor:pointer;border:none;transition:transform 0.2s,box-shadow 0.2s;display:inline-flex;align-items:center;gap:6px;text-decoration:none;}
+    .btn-glass{background:var(--glass);color:var(--text);border:1px solid var(--border);}
+    .btn-glass:hover{background:rgba(255,255,255,0.1);transform:translateY(-1px);}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#060e1f;font-weight:700;box-shadow:0 4px 20px rgba(245,200,66,0.3);}
+    .btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,200,66,0.45);}
+    .btn-outline{background:transparent;color:var(--gold);border:1px solid rgba(245,200,66,0.4);font-weight:600;}
+    .btn-outline:hover{background:rgba(245,200,66,0.08);}
+    .btn-sm{padding:6px 14px;font-size:0.8rem;border-radius:8px;}
+    .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+    .sidebar-overlay.open{opacity:1;pointer-events:all;}
+    .sidebar{position:fixed;top:0;left:0;bottom:0;width:300px;background:rgba(8,18,40,0.97);backdrop-filter:blur(40px);border-right:1px solid var(--border);z-index:501;transform:translateX(-100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;}
+    .sidebar.open{transform:translateX(0);}
+    .sb-header{padding:24px 24px 20px;border-bottom:1px solid var(--border);}
+    .sb-logo{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;}
+    .sb-tagline{font-size:0.77rem;color:var(--muted);}
+    .sb-nav{flex:1;padding:20px 16px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
+    .sb-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;cursor:pointer;transition:all 0.18s;color:var(--muted);font-size:0.88rem;font-weight:600;border:none;background:none;width:100%;text-align:left;}
+    .sb-item:hover{background:rgba(255,255,255,0.06);color:var(--text);}
+    .sb-item.active{background:rgba(245,200,66,0.1);color:var(--gold);}
+    .sb-icon{font-size:1.1rem;width:24px;text-align:center;}
+    .sb-divider{height:1px;background:var(--border);margin:12px 0;}
+    .sb-footer{padding:20px 16px;border-top:1px solid var(--border);}
+    .sb-user{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);}
+    .sb-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#060e1f;font-size:0.9rem;flex-shrink:0;}
+    .sb-user-info{flex:1;min-width:0;}
+    .sb-user-name{font-size:0.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .sb-user-role{font-size:0.72rem;color:var(--muted);}
+    .page-view{display:none;}
+    .page-view.active{display:block;}
+    .hero{text-align:center;padding:88px 40px 52px;}
+    .hero-tag{display:inline-block;background:rgba(245,200,66,0.09);border:1px solid rgba(245,200,66,0.22);color:#fde68a;padding:6px 18px;border-radius:100px;font-size:0.78rem;font-weight:600;margin-bottom:22px;}
+    .hero h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:800;line-height:1.1;letter-spacing:-1.5px;margin-bottom:16px;background:linear-gradient(160deg,#fff 0%,#c7d9ff 45%,#fde68a 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero p{color:var(--muted);font-size:0.98rem;max-width:440px;margin:0 auto 36px;line-height:1.72;}
+    .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:48px;}
+    .stats-strip{display:flex;justify-content:center;margin-bottom:48px;flex-wrap:wrap;}
+    .strip-item{text-align:center;padding:20px 36px;position:relative;}
+    .strip-item:not(:last-child)::after{content:'';position:absolute;right:0;top:20%;bottom:20%;width:1px;background:var(--border);}
+    .strip-val{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .strip-label{font-size:0.75rem;color:var(--muted);margin-top:3px;}
+    .search-wrap{display:flex;justify-content:center;margin-bottom:40px;padding:0 40px;}
+    .search-box{display:flex;width:100%;max-width:560px;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:100px;backdrop-filter:blur(20px);overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s;}
+    .search-box:focus-within{border-color:rgba(245,200,66,0.5);box-shadow:0 0 0 3px rgba(245,200,66,0.1);}
+    .search-box input{flex:1;background:transparent;border:none;outline:none;padding:14px 22px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:0.95rem;}
+    .search-box input::placeholder{color:var(--muted);}
+    .search-box button{background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;width:52px;font-size:1rem;cursor:pointer;border-radius:100px;margin:4px;}
+    .cat-section{padding:0 40px 36px;}
+    .cat-label{font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;}
+    .cat-row{display:flex;flex-wrap:wrap;gap:8px;}
+    .cat-btn{padding:8px 18px;border-radius:100px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.18s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+    .cat-btn:hover{background:rgba(255,255,255,0.09);color:var(--text);}
+    .cat-btn.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#060e1f;border-color:transparent;box-shadow:0 3px 14px rgba(245,200,66,0.3);font-weight:700;}
+    .notice-bar{display:none;margin:0 40px 24px;background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.2);border-radius:14px;padding:13px 20px;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+    .notice-bar.show{display:flex;}
+    .notice-text{font-size:0.84rem;color:var(--muted);line-height:1.5;}
+    .notice-text strong{color:var(--gold);}
+    .fb-banner{position:fixed;top:0;left:0;right:0;z-index:9999;padding:10px 20px;text-align:center;font-size:0.82rem;font-weight:600;transition:all 0.4s;}
+    .fb-banner.connecting{background:rgba(245,200,66,0.15);color:var(--gold);border-bottom:1px solid rgba(245,200,66,0.3);}
+    .fb-banner.connected{background:rgba(74,222,128,0.15);color:var(--green);border-bottom:1px solid rgba(74,222,128,0.3);}
+    .fb-banner.error{background:rgba(255,80,80,0.15);color:var(--red);border-bottom:1px solid rgba(255,80,80,0.3);}
+    .fb-banner.hidden{display:none;}
+    .main{max-width:1260px;margin:0 auto;padding:0 40px 80px;}
+    .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+    .sec-title{font-size:1.05rem;font-weight:700;}
+    .sec-count{background:rgba(245,200,66,0.12);color:var(--gold);border:1px solid rgba(245,200,66,0.2);padding:3px 12px;border-radius:100px;font-size:0.77rem;font-weight:700;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:20px;}
+    .card{background:rgba(255,255,255,0.048);border:1px solid var(--border);border-radius:20px;overflow:hidden;backdrop-filter:blur(20px);cursor:pointer;position:relative;transition:transform 0.24s ease,border-color 0.24s,box-shadow 0.24s;animation:fadeUp 0.4s ease both;}
+    .card::after{content:'';position:absolute;top:0;left:14px;right:14px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);pointer-events:none;}
+    .card:hover{transform:translateY(-6px);border-color:rgba(245,200,66,0.4);box-shadow:0 20px 56px rgba(0,0,0,0.4),0 0 0 1px rgba(245,200,66,0.1);}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+    .card-img-wrap{width:100%;height:168px;overflow:hidden;position:relative;}
+    .card-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s;}
+    .card:hover .card-img{transform:scale(1.04);}
+    .card-img-fallback{width:100%;height:168px;display:none;align-items:center;justify-content:center;font-size:3rem;}
+    .card-overlay{position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to bottom,transparent,rgba(6,14,31,0.5));}
+    .card-key{position:absolute;bottom:10px;left:12px;background:rgba(6,14,31,0.82);border:1px solid rgba(245,200,66,0.4);color:var(--gold);font-size:0.65rem;font-weight:700;padding:4px 10px;border-radius:100px;font-family:monospace;display:none;align-items:center;gap:4px;z-index:2;}
+    .card-key.show{display:inline-flex;}
+    .card-body{padding:17px 19px 19px;}
+    .card-cat{display:inline-flex;align-items:center;gap:5px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;padding:4px 11px;border-radius:100px;margin-bottom:9px;}
+    .card-title{font-size:1rem;font-weight:700;margin-bottom:6px;line-height:1.35;}
+    .card-desc{color:var(--muted);font-size:0.81rem;line-height:1.58;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(255,255,255,0.07);}
+    .card-price{font-weight:800;font-size:0.98rem;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .card-contact{color:var(--muted);font-size:0.75rem;}
+    .empty{grid-column:1/-1;text-align:center;padding:72px 20px;color:var(--muted);}
+    .empty .emo{font-size:3rem;margin-bottom:14px;}
+    .static-page{max-width:780px;margin:0 auto;padding:60px 40px 90px;}
+    .static-page h1{font-size:2rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:10px;background:linear-gradient(135deg,#fff,#c7d9ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .sub-head{color:var(--muted);font-size:0.92rem;margin-bottom:40px;line-height:1.6;}
+    .static-section{margin-bottom:36px;}
+    .static-section h3{font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:12px;}
+    .static-section p,.static-section ul{color:var(--muted);font-size:0.9rem;line-height:1.75;}
+    .static-section ul{padding-left:20px;}
+    .static-section ul li{margin-bottom:6px;}
+    .info-card{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:16px;backdrop-filter:blur(16px);}
+    .info-card h4{font-size:0.9rem;font-weight:700;margin-bottom:6px;}
+    .info-card p{font-size:0.84rem;color:var(--muted);line-height:1.6;}
+    .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
+    .contact-card{background:rgba(255,255,255,0.045);border:1px solid var(--border);border-radius:16px;padding:24px;backdrop-filter:blur(16px);text-align:center;transition:border-color 0.2s,transform 0.2s;}
+    .contact-card:hover{border-color:rgba(245,200,66,0.35);transform:translateY(-3px);}
+    .contact-icon{font-size:2rem;margin-bottom:12px;}
+    .contact-label{font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:6px;}
+    .contact-val{font-size:0.95rem;font-weight:700;}
+    .wa-cta{background:linear-gradient(135deg,rgba(37,211,102,0.15),rgba(37,211,102,0.05));border:1px solid rgba(37,211,102,0.3);border-radius:20px;padding:36px;text-align:center;backdrop-filter:blur(16px);}
+    .wa-cta h3{font-size:1.4rem;font-weight:800;margin-bottom:10px;}
+    .wa-cta p{color:var(--muted);font-size:0.9rem;margin-bottom:24px;line-height:1.65;}
+    .btn-wa{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;font-weight:700;box-shadow:0 4px 20px rgba(37,211,102,0.3);}
+    .btn-wa:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(37,211,102,0.45);}
+    .inbox-wrap{max-width:760px;margin:0 auto;padding:48px 40px 90px;}
+    .inbox-wrap h1{font-size:1.8rem;font-weight:800;margin-bottom:6px;background:linear-gradient(135deg,#fff,#c7d9ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .inbox-sub{color:var(--muted);font-size:0.88rem;margin-bottom:32px;}
+    .inbox-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+    .inbox-empty .emo{font-size:3rem;margin-bottom:14px;}
+    .inbox-msg{background:rgba(255,255,255,0.045);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:14px;backdrop-filter:blur(16px);position:relative;animation:fadeUp 0.3s ease both;}
+    .inbox-msg.unread{border-left:3px solid var(--gold);}
+    .inbox-msg.read{border-left:3px solid rgba(255,255,255,0.1);}
+    .im-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+    .im-title{font-weight:700;font-size:0.95rem;}
+    .im-date{font-size:0.76rem;color:var(--muted);}
+    .im-key{display:inline-flex;align-items:center;gap:4px;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.22);color:var(--gold);font-size:0.68rem;font-weight:700;padding:3px 9px;border-radius:100px;font-family:monospace;margin-bottom:10px;}
+    .im-clabel{font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+    .im-complaint{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:11px 14px;font-size:0.85rem;color:var(--muted);margin-bottom:12px;line-height:1.6;}
+    .im-reply{background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:13px 15px;}
+    .im-reply-label{font-size:0.72rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px;}
+    .im-reply-text{font-size:0.88rem;color:var(--text);line-height:1.65;}
+    .im-pending{background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.2);border-radius:10px;padding:12px 14px;font-size:0.84rem;color:#fb923c;display:flex;align-items:center;gap:8px;}
+    .overlay{position:fixed;inset:0;background:rgba(4,10,24,0.78);backdrop-filter:blur(18px);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;}
+    .overlay.open{display:flex;}
+    .modal{background:rgba(10,24,60,0.92);border:1px solid rgba(255,255,255,0.13);border-radius:26px;padding:38px;width:100%;max-width:440px;backdrop-filter:blur(44px);box-shadow:0 30px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.1);position:relative;overflow:hidden;animation:popIn 0.26s ease;max-height:92vh;overflow-y:auto;}
+    .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);}
+    @keyframes popIn{from{opacity:0;transform:scale(0.93) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+    .modal h2{font-size:1.4rem;font-weight:800;margin-bottom:5px;}
+    .modal .sub{color:var(--muted);font-size:0.86rem;margin-bottom:24px;display:block;line-height:1.6;}
+    .modal-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:10px;padding:4px;margin-bottom:22px;}
+    .modal-tab{flex:1;padding:9px;border:none;background:transparent;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;font-size:0.84rem;font-weight:600;cursor:pointer;border-radius:8px;transition:all 0.18s;}
+    .modal-tab.active{background:rgba(245,200,66,0.15);color:var(--gold);}
+    .field{margin-bottom:15px;}
+    .field label{display:block;font-size:0.79rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
+    .field input,.field select,.field textarea{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.11);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:0.92rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s;resize:vertical;}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(245,200,66,0.5);box-shadow:0 0 0 3px rgba(245,200,66,0.1);}
+    .modal-row{display:flex;gap:10px;margin-top:20px;}
+    .modal-row .btn{flex:1;padding:12px;justify-content:center;}
+    .err{color:var(--red);font-size:0.81rem;margin-top:8px;display:none;}
+    .ok{color:var(--green);font-size:0.82rem;margin-top:8px;display:none;font-weight:600;}
+    .detail-img{width:100%;height:200px;object-fit:cover;border-radius:14px;margin-bottom:16px;display:block;}
+    .detail-emo{text-align:center;font-size:3rem;margin-bottom:14px;}
+    .detail-title{font-size:1.25rem;font-weight:800;margin-bottom:8px;}
+    .detail-desc{color:var(--muted);font-size:0.88rem;line-height:1.68;margin-bottom:18px;}
+    .detail-row{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);margin-bottom:16px;}
+    .detail-price{font-weight:800;font-size:1.1rem;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .detail-keybox{display:inline-flex;align-items:center;gap:6px;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.25);color:var(--gold);font-size:0.76rem;font-weight:700;padding:5px 13px;border-radius:100px;margin-bottom:12px;font-family:monospace;}
+    .detail-hint{background:rgba(245,200,66,0.06);border:1px solid rgba(245,200,66,0.18);border-radius:10px;padding:12px 15px;font-size:0.81rem;color:var(--muted);line-height:1.6;}
+    .detail-hint strong{color:var(--gold);}
+    .detail-hint button{background:none;border:none;color:var(--gold);font-weight:700;cursor:pointer;font-family:inherit;font-size:inherit;text-decoration:underline;}
+    .toast{position:fixed;bottom:28px;right:28px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#060e1f;padding:11px 22px;border-radius:100px;font-weight:700;font-size:0.87rem;z-index:998;opacity:0;transform:translateY(60px);transition:all 0.32s ease;box-shadow:0 8px 28px rgba(245,200,66,0.4);pointer-events:none;}
+    .toast.show{opacity:1;transform:translateY(0);}
+    footer{position:relative;z-index:1;border-top:1px solid var(--border);text-align:center;padding:26px;color:var(--muted);font-size:0.81rem;}
+    footer b{background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    @media(max-width:768px){nav{padding:14px 20px;}.hero{padding:60px 20px 40px;}.cat-section{padding:0 20px 32px;}.search-wrap{padding:0 20px;}.notice-bar{margin:0 20px 20px;}.main{padding:0 20px 60px;}.static-page{padding:40px 20px 60px;}.inbox-wrap{padding:36px 20px 60px;}.contact-grid{grid-template-columns:1fr;}.grid{grid-template-columns:1fr;}.modal{padding:26px 20px;}.strip-item{padding:16px 20px;}}
+  </style>
+</head>
+<body>
+
+<div class="fb-banner connecting" id="fbBanner">🔄 Connecting to Firebase…</div>
+
+<div class="bg-wrap"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<div class="bg-grid"></div>
+
+<div class="page">
+  <nav>
+    <div class="nav-left">
+      <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+      <div class="logo" onclick="showPage('home')">Unimate</div>
+    </div>
+    <div class="nav-right">
+      <div id="navGuest" style="display:flex;gap:8px">
+        <button class="btn btn-glass" onclick="openAuthModal('login')">Log In</button>
+        <button class="btn btn-gold"  onclick="openAuthModal('signup')">Sign Up</button>
+      </div>
+      <div class="nav-logged" id="navLogged">
+        <button class="inbox-btn" onclick="showPage('inbox')">📬 Inbox<span class="inbox-dot" id="inboxDot"></span></button>
+        <div class="nav-avatar" id="navAvatar">U</div>
+        <span class="nav-username" id="navUsername"></span>
+        <button class="btn btn-glass btn-sm" onclick="doLogout()">Log Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="sidebar-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sb-header"><div class="sb-logo">Unimate</div><div class="sb-tagline">🎓 Perlis Student Marketplace</div></div>
+    <div class="sb-nav">
+      <button class="sb-item active" id="sbHome"    onclick="showPage('home');closeSidebar()"><span class="sb-icon">🏠</span> Home</button>
+      <button class="sb-item"        id="sbInbox"   onclick="showPage('inbox');closeSidebar()"><span class="sb-icon">📬</span> My Inbox</button>
+      <div class="sb-divider"></div>
+      <button class="sb-item"        id="sbAbout"   onclick="showPage('about');closeSidebar()"><span class="sb-icon">ℹ️</span> About Us</button>
+      <button class="sb-item"        id="sbTerms"   onclick="showPage('terms');closeSidebar()"><span class="sb-icon">📋</span> Terms of Service</button>
+      <button class="sb-item"        id="sbContact" onclick="showPage('contact');closeSidebar()"><span class="sb-icon">📞</span> Contact Admin</button>
+      <div class="sb-divider"></div>
+      <button class="sb-item" id="sbLogin" onclick="openAuthModal('login');closeSidebar()"><span class="sb-icon">🔐</span> Log In / Sign Up</button>
+      <button class="sb-item"              onclick="openAuthModal('admin');closeSidebar()"><span class="sb-icon">⚙️</span> Admin Access</button>
+    </div>
+    <div class="sb-footer" id="sbFooter" style="display:none">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sbAvatarEl">U</div>
+        <div class="sb-user-info"><div class="sb-user-name" id="sbUserName">—</div><div class="sb-user-role">Student Member</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="page-view active" id="pageHome">
+    <div class="hero">
+      <div class="hero-tag">🎓 Perlis Student Marketplace</div>
+      <h1>Your campus,<br>your community.</h1>
+      <p>Discover services from fellow students — food, rides, printing, tutoring &amp; more.</p>
+      <div class="hero-cta">
+        <button class="btn btn-gold" onclick="document.getElementById('searchInput').focus()">🔍 Browse Services</button>
+        <button class="btn btn-glass" onclick="openAuthModal('signup')">Join Free</button>
+      </div>
+    </div>
+    <div class="stats-strip">
+      <div class="strip-item"><div class="strip-val" id="statServices">—</div><div class="strip-label">Services Listed</div></div>
+      <div class="strip-item"><div class="strip-val">100%</div><div class="strip-label">Student Run</div></div>
+      <div class="strip-item"><div class="strip-val">Free</div><div class="strip-label">To Join</div></div>
+      <div class="strip-item"><div class="strip-val">24/7</div><div class="strip-label">Available</div></div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search services…"/>
+        <button onclick="render()">🔍</button>
+      </div>
+    </div>
+    <div class="cat-section">
+      <div class="cat-label">Browse by Category</div>
+      <div class="cat-row">
+        <button class="cat-btn active" onclick="setCategory('all',this)">🌐 All</button>
+        <button class="cat-btn" onclick="setCategory('food',this)">🍔 Food</button>
+        <button class="cat-btn" onclick="setCategory('transport',this)">🚗 Transport</button>
+        <button class="cat-btn" onclick="setCategory('printing',this)">🖨️ Printing</button>
+        <button class="cat-btn" onclick="setCategory('tutoring',this)">📚 Tutoring</button>
+        <button class="cat-btn" onclick="setCategory('design',this)">🎨 Design</button>
+        <button class="cat-btn" onclick="setCategory('otherservice',this)">🛠️ Other Service</button>
+        <button class="cat-btn" onclick="setCategory('otherbusiness',this)">💼 Other Business</button>
+      </div>
+    </div>
+    <div class="notice-bar" id="noticeBar">
+      <div class="notice-text">You are logged in. Each card shows a <strong>Key ID</strong> — use it to file a complaint.</div>
+      <button class="btn btn-outline" style="font-size:0.81rem;padding:7px 16px" onclick="openComplaintModal()">📝 File Complaint</button>
+    </div>
+    <div class="main">
+      <div class="sec-head"><div class="sec-title">🛍️ Available Services</div><div class="sec-count" id="countLabel">Loading…</div></div>
+      <div class="grid" id="grid"><div class="empty"><div class="emo">⏳</div><p>Connecting to Firebase…</p></div></div>
+    </div>
+    <footer>Made with ❤️ for students &nbsp;·&nbsp; <b>Unimate</b> © 2025 · Perlis</footer>
+  </div>
+
+  <!-- INBOX -->
+  <div class="page-view" id="pageInbox">
+    <div class="inbox-wrap">
+      <h1>📬 My Inbox</h1>
+      <div class="inbox-sub" id="inboxSub">Your complaint replies from admin will appear here.</div>
+      <div id="inboxList"></div>
+    </div>
+    <footer>Made with ❤️ for students &nbsp;·&nbsp; <b>Unimate</b> © 2025 · Perlis</footer>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="page-view" id="pageAbout">
+    <div class="static-page">
+      <h1>About Unimate</h1>
+      <div class="sub-head">Connecting students, empowering campus commerce.</div>
+      <div class="static-section"><h3>🎯 Our Mission</h3><p>Unimate is a student-driven marketplace built for the campus community of Perlis. We believe every student has a skill or service to offer — and every student has a need. Unimate bridges that gap.</p></div>
+      <div class="static-section"><h3>🌟 What We Offer</h3>
+        <div class="info-card"><h4>🍔 Food and Delivery</h4><p>Homemade meals and snacks delivered right to your block or hostel room.</p></div>
+        <div class="info-card"><h4>🚗 Transport and Rides</h4><p>Affordable rides to and from campus, town, airports and more.</p></div>
+        <div class="info-card"><h4>🖨️ Printing Services</h4><p>Fast, affordable color and B&W printing, binding, and laminating.</p></div>
+        <div class="info-card"><h4>📚 Tutoring</h4><p>Academic support from seniors in math, science, language and more.</p></div>
+        <div class="info-card"><h4>🎨 Design and Creative</h4><p>Logos, posters, presentations and digital design for any occasion.</p></div>
+      </div>
+      <div class="static-section"><h3>🏫 Why Unimate?</h3><ul><li>100% student-run — by students, for students</li><li>Free to join and free to browse</li><li>Built-in complaint system for safe transactions</li><li>Open to all — students, staff, and the public</li></ul></div>
+    </div>
+    <footer>Made with ❤️ for students &nbsp;·&nbsp; <b>Unimate</b> © 2025 · Perlis</footer>
+  </div>
+
+  <!-- TERMS -->
+  <div class="page-view" id="pageTerms">
+    <div class="static-page">
+      <h1>Terms of Service</h1>
+      <div class="sub-head">Last updated: January 2025. Please read carefully before using Unimate.</div>
+      <div class="static-section"><h3>📌 1. Acceptance of Terms</h3><p>By accessing or using Unimate, you agree to be bound by these Terms of Service.</p></div>
+      <div class="static-section"><h3>👤 2. User Accounts</h3><ul><li>You must provide accurate information including your real name and student/IC number.</li><li>You are responsible for maintaining the confidentiality of your account.</li><li>Unimate reserves the right to suspend accounts that violate these terms.</li></ul></div>
+      <div class="static-section"><h3>📦 3. Listings and Services</h3><ul><li>All listings must be genuine, legal, and accurately described.</li><li>Admin reserves the right to remove listings that violate community standards.</li><li>Sellers are responsible for delivering services as described.</li></ul></div>
+      <div class="static-section"><h3>⚠️ 4. Prohibited Activities</h3><ul><li>Posting false or fraudulent listings</li><li>Harassment or inappropriate communication</li><li>Selling illegal goods or services</li></ul></div>
+      <div class="static-section"><h3>📬 5. Complaints and Disputes</h3><p>Admin will review all complaints and respond within 3 working days. Unimate acts as a mediator only.</p></div>
+      <div class="static-section"><h3>🔒 6. Privacy</h3><p>Your personal information is collected for account verification only and will not be shared with third parties.</p></div>
+    </div>
+    <footer>Made with ❤️ for students &nbsp;·&nbsp; <b>Unimate</b> © 2025 · Perlis</footer>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="page-view" id="pageContact">
+    <div class="static-page">
+      <h1>Contact Admin</h1>
+      <div class="sub-head">Need help? Reach out to the Unimate admin team.</div>
+      <div class="contact-grid">
+        <div class="contact-card"><div class="contact-icon">📱</div><div class="contact-label">WhatsApp</div><div class="contact-val">+60 11-1234 5678</div></div>
+        <div class="contact-card"><div class="contact-icon">📧</div><div class="contact-label">Email</div><div class="contact-val">admin@unimate.my</div></div>
+        <div class="contact-card"><div class="contact-icon">📍</div><div class="contact-label">Location</div><div class="contact-val">Perlis, Malaysia</div></div>
+        <div class="contact-card"><div class="contact-icon">🕐</div><div class="contact-label">Response Time</div><div class="contact-val">Within 24 hours</div></div>
+      </div>
+      <div class="wa-cta">
+        <h3>💬 Let's Start Our Business!</h3>
+        <p>Ready to list your service? Chat directly with us on WhatsApp and we will guide you through everything.</p>
+        <a href="https://wa.me/601112345678?text=Hi%20Unimate%2C%20I%20want%20to%20list%20my%20service!" target="_blank" class="btn btn-wa" style="font-size:1rem;padding:14px 32px">📲 Chat on WhatsApp</a>
+      </div>
+    </div>
+    <footer>Made with ❤️ for students &nbsp;·&nbsp; <b>Unimate</b> © 2025 · Perlis</footer>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="authOverlay">
+  <div class="modal">
+    <h2 id="authTitle">Welcome Back</h2>
+    <span class="sub" id="authSub">Log in to your Unimate account.</span>
+    <div class="modal-tabs" id="authTabs">
+      <button class="modal-tab active" id="tabLogin"  onclick="switchAuthTab('login')">Log In</button>
+      <button class="modal-tab"        id="tabSignup" onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+    <div id="formLogin">
+      <div class="field"><label>Username / Student ID</label><input type="text" id="liUser" placeholder="Your username or ID"/></div>
+      <div class="field"><label>Password</label><input type="password" id="liPass" placeholder="Your password"/></div>
+      <div class="err" id="liErr">Incorrect credentials. Please try again.</div>
+      <div class="modal-row">
+        <button class="btn btn-glass" onclick="closeOverlay('authOverlay')">Cancel</button>
+        <button class="btn btn-gold"  onclick="doLogin()">Log In</button>
+      </div>
+    </div>
+    <div id="formSignup" style="display:none">
+      <div class="field"><label>Full Name</label><input type="text" id="suName" placeholder="Your full name"/></div>
+      <div class="field"><label>IC Number / Student ID</label><input type="text" id="suIc" placeholder="e.g. 980101-01-1234 or STU12345"/></div>
+      <div class="field"><label>Username</label><input type="text" id="suUser" placeholder="Choose a username (no spaces)"/></div>
+      <div class="field"><label>Password</label><input type="password" id="suPass" placeholder="Min 6 characters"/></div>
+      <div class="err" id="suErr"></div>
+      <div class="ok"  id="suOk">Account created! Logging you in…</div>
+      <div class="modal-row">
+        <button class="btn btn-glass" onclick="closeOverlay('authOverlay')">Cancel</button>
+        <button class="btn btn-gold"  onclick="doSignup()">Create Account</button>
+      </div>
+    </div>
+    <div id="formAdmin" style="display:none">
+      <div class="field"><label>Admin Username</label><input type="text" id="adUser" placeholder="admin"/></div>
+      <div class="field"><label>Admin Password</label><input type="password" id="adPass" placeholder="Password"/></div>
+      <div class="err" id="adErr">Incorrect admin credentials.</div>
+      <div class="modal-row">
+        <button class="btn btn-glass" onclick="closeOverlay('authOverlay')">Cancel</button>
+        <button class="btn btn-gold"  onclick="doAdminLogin()">Admin Login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal" style="max-width:500px">
+    <div id="detailBody"></div>
+    <div class="modal-row"><button class="btn btn-glass" onclick="closeOverlay('detailOverlay')">Close</button></div>
+  </div>
+</div>
+
+<!-- COMPLAINT MODAL -->
+<div class="overlay" id="complaintOverlay">
+  <div class="modal">
+    <h2>📝 File a Complaint</h2>
+    <span class="sub">Enter the seller Key ID (visible on each card after login) and describe your issue. Admin will reply to your inbox.</span>
+    <div class="field"><label>Seller Key ID</label><input type="text" id="cKeyId" placeholder="e.g. UNI-A1B2"/></div>
+    <div class="field"><label>Describe Your Issue</label><textarea id="cMsg" rows="4" placeholder="Explain your issue clearly…"></textarea></div>
+    <div class="err" id="cErr"></div>
+    <div class="ok"  id="cOk">Complaint submitted! Check your inbox for admin reply.</div>
+    <div class="modal-row">
+      <button class="btn btn-glass" onclick="closeOverlay('complaintOverlay')">Cancel</button>
+      <button class="btn btn-gold"  onclick="submitComplaint()">📤 Submit</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════ FIREBASE SDK (module) ═══════════ -->
+<script type="module">
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, addDoc, doc,
+           updateDoc, deleteDoc, query, where, orderBy,
+           onSnapshot, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyDOAN0DXMIRlIKyU2HJDiXkaHK-rGeVWSo",
+    authDomain:        "unimate-477ef.firebaseapp.com",
+    projectId:         "unimate-477ef",
+    storageBucket:     "unimate-477ef.firebasestorage.app",
+    messagingSenderId: "864282511642",
+    appId:             "1:864282511642:web:77779dc72789696b39c4a3"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  /* Expose ALL needed Firestore functions globally */
+  window.DB = db;
+  window.FS = { collection, getDocs, addDoc, doc, updateDoc, deleteDoc,
+                query, where, orderBy, onSnapshot, serverTimestamp };
+
+  /* ── Seed default posts if Firestore empty ── */
+  const SEED = [
+    {key:'UNI-A1B2',title:'Grab Ride to Campus',    category:'transport',    price:'RM 5/trip',    desc:'Daily morning rides from Kangar to campus. Reliable and on time. Book a day before!',       contact:'Ahmad - 012-3456789',img:'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=600&q=80'},
+    {key:'UNI-C3D4',title:'Nasi Lemak Delivery',    category:'food',         price:'RM 4/pack',    desc:'Homemade nasi lemak delivered to your block every morning at 7AM. Order by 10PM.',          contact:'Aini - 011-2345678', img:'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&q=80'},
+    {key:'UNI-E5F6',title:'A4 Color Printing',      category:'printing',     price:'RM 0.50/page', desc:'High-quality color and B&W printing. Ready in 30 minutes. Binding available.',             contact:'Raj - 016-7890123',  img:'https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=600&q=80'},
+    {key:'UNI-G7H8',title:'Math & Stats Tutoring',  category:'tutoring',     price:'RM 30/hour',   desc:'Final year student offering math, stats and calculus tutoring. Online or in-person.',       contact:'Li Wei - 019-4567890',img:'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&q=80'},
+    {key:'UNI-I9J0',title:'Logo & Poster Design',   category:'design',       price:'From RM 20',   desc:'Professional designs using Canva and Illustrator. Logos, posters, presentations.',          contact:'Siti - 013-6789012', img:'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80'},
+    {key:'UNI-K1L2',title:'Laundry Pick-up Service',category:'otherservice', price:'RM 8/load',    desc:'Pick up, wash, dry, fold and deliver back to your room within 24 hours.',                  contact:'Faiz - 017-8901234', img:'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=600&q=80'},
+    {key:'UNI-M3N4',title:'Student Thrift Shop',    category:'otherbusiness',price:'From RM 5',    desc:'Second-hand clothes, books and stationery. Quality checked. DM to browse.',                contact:'Hana - 018-9012345', img:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80'}
+  ];
+
+  async function init() {
+    var banner = document.getElementById('fbBanner');
+    try {
+      var snap = await getDocs(collection(db, 'posts'));
+      if (snap.empty) {
+        banner.textContent = '⚡ Setting up database for first time…';
+        for (var i = 0; i < SEED.length; i++) {
+          await addDoc(collection(db, 'posts'), Object.assign({}, SEED[i], { createdAt: serverTimestamp() }));
+        }
+      }
+      banner.className = 'fb-banner connected';
+      banner.textContent = '✅ Connected to Firebase';
+      setTimeout(function() { banner.className = 'fb-banner hidden'; }, 2500);
+
+      /* Real-time posts listener → update global array + re-render */
+      FS.onSnapshot(FS.collection(db, 'posts'), function(s) {
+        window._POSTS = [];
+        s.forEach(function(d) { var p = d.data(); p._docId = d.id; window._POSTS.push(p); });
+        if (typeof render === 'function') render();
+      });
+
+      /* Real-time complaints listener → update inbox dot */
+      FS.onSnapshot(FS.collection(db, 'complaints'), function() {
+        if (window._USER && typeof checkInboxDot === 'function') checkInboxDot();
+      });
+
+    } catch (e) {
+      console.error('Firebase init error:', e);
+      banner.className = 'fb-banner error';
+      banner.textContent = '❌ Firebase connection failed. Check console.';
+    }
+  }
+
+  init();
+</script>
+
+<!-- ═══════════ APP LOGIC ═══════════ -->
+<script>
+var CATS = {
+  food:         {label:'Food',           emoji:'🍔', color:'#fb923c', bg:'rgba(251,146,60,0.15)'},
+  transport:    {label:'Transport/Grab', emoji:'🚗', color:'#38bdf8', bg:'rgba(56,189,248,0.15)'},
+  printing:     {label:'Printing',       emoji:'🖨️', color:'#a78bfa', bg:'rgba(167,139,250,0.15)'},
+  tutoring:     {label:'Tutoring',       emoji:'📚', color:'#4ade80', bg:'rgba(74,222,128,0.15)'},
+  design:       {label:'Design',         emoji:'🎨', color:'#f5c842', bg:'rgba(245,200,66,0.15)'},
+  otherservice: {label:'Other Service',  emoji:'🛠️', color:'#fb7185', bg:'rgba(251,113,133,0.15)'},
+  otherbusiness:{label:'Other Business', emoji:'💼', color:'#c084fc', bg:'rgba(192,132,252,0.15)'}
+};
+
+var currentCat = 'all';
+window._POSTS  = [];   /* filled by Firebase onSnapshot */
+window._USER   = null; /* logged-in user object */
+
+/* ── PAGES ── */
+var PAGES = {home:'pageHome',inbox:'pageInbox',about:'pageAbout',terms:'pageTerms',contact:'pageContact'};
+var SBS   = {home:'sbHome',inbox:'sbInbox',about:'sbAbout',terms:'sbTerms',contact:'sbContact'};
+function showPage(n) {
+  Object.keys(PAGES).forEach(function(k){var e=document.getElementById(PAGES[k]);if(e)e.classList.remove('active');});
+  var t=document.getElementById(PAGES[n]); if(t) t.classList.add('active');
+  Object.keys(SBS).forEach(function(k){var e=document.getElementById(SBS[k]);if(e)e.classList.remove('active');});
+  var s=document.getElementById(SBS[n]); if(s) s.classList.add('active');
+  if(n==='inbox') renderInbox();
+  if(n==='home')  render();
+  window.scrollTo(0,0);
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sbOverlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOverlay').classList.remove('open');}
+
+/* ── RENDER CARDS ── */
+function render() {
+  var search   = document.getElementById('searchInput').value.toLowerCase();
+  var grid     = document.getElementById('grid');
+  var label    = document.getElementById('countLabel');
+  var posts    = window._POSTS;
+
+  if (!posts || !posts.length) {
+    grid.innerHTML = '<div class="empty"><div class="emo">⏳</div><p>Loading services from Firebase…</p></div>';
+    label.textContent = '…';
+    return;
+  }
+
+  var filtered = [];
+  for (var i=0; i<posts.length; i++) {
+    var s = posts[i];
+    if ((currentCat==='all' || s.category===currentCat) &&
+        (s.title.toLowerCase().indexOf(search)!==-1 || s.desc.toLowerCase().indexOf(search)!==-1)) {
+      filtered.push(s);
+    }
+  }
+
+  label.textContent = filtered.length + ' service' + (filtered.length!==1?'s':'');
+  document.getElementById('statServices').textContent = posts.length + '+';
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty"><div class="emo">🔍</div><p>No services found.</p></div>';
+    return;
+  }
+
+  var html = '';
+  for (var j=0; j<filtered.length; j++) {
+    var p   = filtered[j];
+    var cat = CATS[p.category] || CATS.food;
+    var uid = p._docId;
+    var showKey = window._USER ? 'show' : '';
+    html += '<div class="card" style="animation-delay:' + (j*0.055) + 's" onclick="openDetail(\'' + uid + '\')">';
+    html += '<div class="card-img-wrap">';
+    if (p.img) {
+      html += '<img class="card-img" src="' + p.img + '" alt="' + p.title + '" onerror="this.style.display=\'none\';this.parentElement.querySelector(\'.card-img-fallback\').style.display=\'flex\'">';
+    }
+    html += '<div class="card-img-fallback" style="' + (p.img?'':'display:flex;') + 'background:' + cat.bg + '">' + cat.emoji + '</div>';
+    html += '<div class="card-overlay"></div>';
+    html += '<span class="card-key ' + showKey + '">🔑 ' + (p.key||'N/A') + '</span>';
+    html += '</div><div class="card-body">';
+    html += '<span class="card-cat" style="background:' + cat.bg + ';color:' + cat.color + '">' + cat.emoji + ' ' + cat.label + '</span>';
+    html += '<div class="card-title">' + p.title + '</div>';
+    html += '<div class="card-desc">' + p.desc + '</div>';
+    html += '<div class="card-footer"><span class="card-price">' + p.price + '</span><span class="card-contact">📞 ' + p.contact + '</span></div>';
+    html += '</div></div>';
+  }
+  grid.innerHTML = html;
+}
+
+function setCategory(cat, btn) {
+  currentCat = cat;
+  var all = document.querySelectorAll('.cat-btn');
+  for (var i=0;i<all.length;i++) all[i].classList.remove('active');
+  btn.classList.add('active');
+  render();
+}
+document.getElementById('searchInput').addEventListener('input', render);
+
+/* ── DETAIL ── */
+function openDetail(docId) {
+  var posts = window._POSTS;
+  var found = null;
+  for (var i=0;i<posts.length;i++) { if(posts[i]._docId===docId){found=posts[i];break;} }
+  if (!found) return;
+  var cat = CATS[found.category] || CATS.food;
+  var html = '';
+  if (found.img) { html += '<img class="detail-img" src="' + found.img + '" onerror="this.style.display=\'none\'">'; }
+  else           { html += '<div class="detail-emo">' + cat.emoji + '</div>'; }
+  html += '<span class="card-cat" style="background:' + cat.bg + ';color:' + cat.color + ';display:inline-flex;align-items:center;gap:5px;margin-bottom:12px">' + cat.emoji + ' ' + cat.label + '</span>';
+  html += '<div class="detail-title">' + found.title + '</div>';
+  html += '<div class="detail-desc">' + found.desc + '</div>';
+  html += '<div class="detail-row"><span class="detail-price">' + found.price + '</span><span style="color:var(--muted);font-size:0.84rem">📞 ' + found.contact + '</span></div>';
+  if (window._USER) {
+    html += '<div class="detail-keybox">🔑 Key ID: ' + (found.key||'N/A') + '</div><br>';
+    html += '<div class="detail-hint">Issue with this seller? <strong>' + (found.key||'') + '</strong> — <button onclick="prefillComplaint(\'' + (found.key||'') + '\')">file a complaint</button>.</div>';
+  } else {
+    html += '<div class="detail-hint">🔑 <button onclick="closeOverlay(\'detailOverlay\');openAuthModal(\'login\')">Log in</button> to see the Key ID and file complaints.</div>';
+  }
+  document.getElementById('detailBody').innerHTML = html;
+  openOverlay('detailOverlay');
+}
+
+function prefillComplaint(key) {
+  closeOverlay('detailOverlay');
+  document.getElementById('cKeyId').value = key;
+  document.getElementById('cMsg').value   = '';
+  document.getElementById('cErr').style.display = 'none';
+  document.getElementById('cOk').style.display  = 'none';
+  openOverlay('complaintOverlay');
+}
+
+/* ── AUTH ── */
+function openAuthModal(mode) {
+  document.getElementById('authTabs').style.display = (mode==='admin') ? 'none' : 'flex';
+  document.getElementById('formLogin').style.display  = 'none';
+  document.getElementById('formSignup').style.display = 'none';
+  document.getElementById('formAdmin').style.display  = 'none';
+  if (mode==='admin') {
+    document.getElementById('authTitle').textContent = 'Admin Access';
+    document.getElementById('authSub').textContent   = 'Enter admin credentials.';
+    document.getElementById('formAdmin').style.display = 'block';
+    document.getElementById('adUser').value=''; document.getElementById('adPass').value='';
+    document.getElementById('adErr').style.display='none';
+  } else if (mode==='signup') {
+    document.getElementById('authTitle').textContent = 'Create Account';
+    document.getElementById('authSub').textContent   = 'Join Unimate — it\'s free!';
+    switchAuthTab('signup');
+  } else {
+    document.getElementById('authTitle').textContent = 'Welcome Back';
+    document.getElementById('authSub').textContent   = 'Log in to your Unimate account.';
+    switchAuthTab('login');
+  }
+  openOverlay('authOverlay');
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('tabLogin').classList.toggle('active',  tab==='login');
+  document.getElementById('tabSignup').classList.toggle('active', tab==='signup');
+  document.getElementById('formLogin').style.display  = tab==='login'  ? 'block' : 'none';
+  document.getElementById('formSignup').style.display = tab==='signup' ? 'block' : 'none';
+  if (tab==='login')  { document.getElementById('liUser').value=''; document.getElementById('liPass').value=''; document.getElementById('liErr').style.display='none'; }
+  if (tab==='signup') { document.getElementById('suErr').style.display='none'; document.getElementById('suOk').style.display='none'; }
+}
+
+async function doSignup() {
+  var name  = document.getElementById('suName').value.trim();
+  var ic    = document.getElementById('suIc').value.trim();
+  var uname = document.getElementById('suUser').value.trim().toLowerCase().replace(/\s/g,'');
+  var pass  = document.getElementById('suPass').value;
+  var errEl = document.getElementById('suErr'); var okEl = document.getElementById('suOk');
+  errEl.style.display='none'; okEl.style.display='none';
+  if (!name||!ic||!uname||!pass) { errEl.textContent='Please fill in all fields.'; errEl.style.display='block'; return; }
+  if (pass.length<6) { errEl.textContent='Password must be at least 6 characters.'; errEl.style.display='block'; return; }
+  if (!window.DB) { errEl.textContent='Firebase not connected.'; errEl.style.display='block'; return; }
+  /* Check duplicate username */
+  var snap = await FS.getDocs(FS.query(FS.collection(window.DB,'users'), FS.where('username','==',uname)));
+  if (!snap.empty) { errEl.textContent='Username already taken.'; errEl.style.display='block'; return; }
+  await FS.addDoc(FS.collection(window.DB,'users'), {username:uname, name:name, ic:ic, password:pass});
+  okEl.style.display='block';
+  setTimeout(function() {
+    closeOverlay('authOverlay');
+    setLoggedIn({username:uname, name:name, ic:ic});
+    showToast('Welcome to Unimate, ' + name + '!');
+  }, 1200);
+}
+
+async function doLogin() {
+  var u = document.getElementById('liUser').value.trim().toLowerCase();
+  var p = document.getElementById('liPass').value.trim();
+  document.getElementById('liErr').style.display='none';
+  if (!window.DB) { document.getElementById('liErr').style.display='block'; return; }
+  var snap = await FS.getDocs(FS.query(FS.collection(window.DB,'users'),
+    FS.where('password','==',p)));
+  var found = null;
+  snap.forEach(function(d) {
+    var usr = d.data(); usr._docId = d.id;
+    if (usr.username===u || usr.ic===u) found = usr;
+  });
+  if (found) { closeOverlay('authOverlay'); setLoggedIn(found); showToast('Welcome back, ' + found.name + '!'); return; }
+  document.getElementById('liErr').style.display='block';
+}
+
+function doAdminLogin() {
+  var u = document.getElementById('adUser').value.trim().toLowerCase();
+  var p = document.getElementById('adPass').value.trim();
+  document.getElementById('adErr').style.display='none';
+  if (u==='admin' && p==='unimate123') {
+    closeOverlay('authOverlay'); showToast('Welcome, Admin!');
+    setTimeout(function(){window.location.href='admin.html';},900); return;
+  }
+  document.getElementById('adErr').style.display='block';
+}
+
+function setLoggedIn(user) {
+  window._USER = user;
+  document.getElementById('navGuest').style.display  = 'none';
+  document.getElementById('navLogged').style.display = 'flex';
+  var init = (user.name||user.username).charAt(0).toUpperCase();
+  document.getElementById('navAvatar').textContent   = init;
+  document.getElementById('sbAvatarEl').textContent  = init;
+  document.getElementById('navUsername').textContent = user.name||user.username;
+  document.getElementById('sbUserName').textContent  = user.name||user.username;
+  document.getElementById('sbFooter').style.display  = 'block';
+  document.getElementById('sbLogin').style.display   = 'none';
+  document.getElementById('noticeBar').classList.add('show');
+  render();
+  checkInboxDot();
+}
+
+function doLogout() {
+  window._USER = null;
+  document.getElementById('navGuest').style.display  = 'flex';
+  document.getElementById('navLogged').style.display = 'none';
+  document.getElementById('sbFooter').style.display  = 'none';
+  document.getElementById('sbLogin').style.display   = 'flex';
+  document.getElementById('noticeBar').classList.remove('show');
+  document.getElementById('inboxDot').classList.remove('show');
+  showToast('You have been logged out.');
+  showPage('home');
+}
+
+/* ── COMPLAINT ── */
+function openComplaintModal() {
+  if (!window._USER) { openAuthModal('login'); return; }
+  document.getElementById('cKeyId').value=''; document.getElementById('cMsg').value='';
+  document.getElementById('cErr').style.display='none'; document.getElementById('cOk').style.display='none';
+  openOverlay('complaintOverlay');
+}
+
+async function submitComplaint() {
+  if (!window._USER) { openAuthModal('login'); return; }
+  var keyId = document.getElementById('cKeyId').value.trim().toUpperCase();
+  var msg   = document.getElementById('cMsg').value.trim();
+  var errEl = document.getElementById('cErr'); var okEl = document.getElementById('cOk');
+  errEl.style.display='none'; okEl.style.display='none';
+  if (!keyId||!msg) { errEl.textContent='Please fill in all fields.'; errEl.style.display='block'; return; }
+  var found = null;
+  for (var i=0;i<window._POSTS.length;i++) { if(window._POSTS[i].key&&window._POSTS[i].key.toUpperCase()===keyId){found=window._POSTS[i];break;} }
+  if (!found) { errEl.textContent='Key ID not found. Check the Key ID on the service card.'; errEl.style.display='block'; return; }
+  var now = new Date();
+  var dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  await FS.addDoc(FS.collection(window.DB,'complaints'), {
+    keyId:keyId, sellerTitle:found.title,
+    username:window._USER.username, name:window._USER.name,
+    message:msg, date:dateStr, status:'pending', reply:'', readByUser:false,
+    createdAt: FS.serverTimestamp()
+  });
+  okEl.style.display='block'; showToast('Complaint submitted!');
+  setTimeout(function(){closeOverlay('complaintOverlay');}, 2000);
+}
+
+/* ── INBOX ── */
+async function renderInbox() {
+  var wrap = document.getElementById('inboxList');
+  var sub  = document.getElementById('inboxSub');
+  if (!window._USER) {
+    wrap.innerHTML = '<div class="inbox-empty"><div class="emo">🔐</div><p>Please log in to view your inbox.</p><br><button class="btn btn-gold" onclick="openAuthModal(\'login\')">Log In</button></div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="inbox-empty"><div class="emo">⏳</div><p>Loading…</p></div>';
+
+  var snap = await FS.getDocs(FS.query(FS.collection(window.DB,'complaints'), FS.where('username','==',window._USER.username)));
+  var mine = [];
+  snap.forEach(function(d) { var c=d.data(); c._docId=d.id; mine.push(c); });
+  mine.sort(function(a,b){ return (b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0); });
+
+  /* Mark replied as read */
+  for (var i=0;i<mine.length;i++) {
+    if (mine[i].status==='replied' && !mine[i].readByUser && mine[i]._docId) {
+      await FS.updateDoc(FS.doc(window.DB,'complaints',mine[i]._docId), {readByUser:true});
+      mine[i].readByUser = true;
+    }
+  }
+  document.getElementById('inboxDot').classList.remove('show');
+
+  if (!mine.length) {
+    wrap.innerHTML = '<div class="inbox-empty"><div class="emo">📭</div><p>No complaints filed yet. Use the Key ID on a service card to file a complaint.</p></div>';
+    return;
+  }
+  sub.textContent = 'You have ' + mine.length + ' complaint' + (mine.length!==1?'s':'') + ' on record.';
+
+  var html = '';
+  for (var k=0; k<mine.length; k++) {
+    var c = mine[k];
+    var unread = (c.status==='replied' && !c.readByUser);
+    html += '<div class="inbox-msg ' + (unread?'unread':'read') + '" style="animation-delay:' + (k*0.05) + 's">';
+    html += '<div class="im-header"><div class="im-title">' + (unread?'🔔 ':'') + 'Complaint — ' + c.sellerTitle + '</div><div class="im-date">' + c.date + '</div></div>';
+    html += '<div class="im-key">🔑 ' + c.keyId + '</div>';
+    html += '<div class="im-clabel">Your Message</div>';
+    html += '<div class="im-complaint">' + c.message + '</div>';
+    if (c.status==='replied') {
+      html += '<div class="im-reply"><div class="im-reply-label">✅ Admin Reply</div><div class="im-reply-text">' + c.reply + '</div></div>';
+    } else {
+      html += '<div class="im-pending">⏳ Pending — Admin will reply soon.</div>';
+    }
+    html += '</div>';
+  }
+  wrap.innerHTML = html;
+}
+
+async function checkInboxDot() {
+  if (!window._USER || !window.DB) return;
+  var snap = await FS.getDocs(FS.query(FS.collection(window.DB,'complaints'),
+    FS.where('username','==',window._USER.username),
+    FS.where('status','==','replied'),
+    FS.where('readByUser','==',false)));
+  if (!snap.empty) { document.getElementById('inboxDot').classList.add('show'); }
+  else             { document.getElementById('inboxDot').classList.remove('show'); }
+}
+
+/* ── OVERLAY ── */
+function openOverlay(id)  { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+var _ols = document.querySelectorAll('.overlay');
+for (var _i=0;_i<_ols.length;_i++) {
+  _ols[_i].addEventListener('click', function(e) { if(e.target===this) this.classList.remove('open'); });
+}
+
+function showToast(msg) {
+  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},3500);
+}
+</script>
+</body>
+</html>
