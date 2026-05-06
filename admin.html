@@ -89,9 +89,23 @@
     .img-zone .zt{color:var(--muted);font-size:0.77rem;text-align:center;line-height:1.5;}
     .img-zone .zt span{color:var(--gold);font-weight:600;}
     .img-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;}
-    .img-prev{width:100%;height:130px;border-radius:12px;overflow:hidden;display:none;border:1px solid var(--border);position:relative;}
-    .img-prev img{width:100%;height:100%;object-fit:cover;}
-    .img-prev-rm{position:absolute;top:7px;right:7px;background:rgba(0,0,0,0.65);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:0.74rem;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+    /* CROP TOOL */
+    .crop-wrap{display:none;flex-direction:column;gap:10px;}
+    .crop-frame{width:100%;height:200px;border-radius:12px;border:1px solid var(--border);overflow:hidden;position:relative;cursor:grab;background:#111;user-select:none;}
+    .crop-frame.grabbing{cursor:grabbing;}
+    .crop-frame img{position:absolute;transform-origin:top left;will-change:transform;}
+    .crop-hint{font-size:0.74rem;color:var(--muted);text-align:center;}
+    .crop-hint span{color:var(--gold);}
+    .crop-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .crop-zoom{display:flex;align-items:center;gap:8px;flex:1;min-width:160px;}
+    .crop-zoom label{font-size:0.74rem;color:var(--muted);white-space:nowrap;}
+    .crop-zoom input[type="range"]{flex:1;accent-color:var(--gold);cursor:pointer;}
+    .crop-zval{font-size:0.74rem;color:var(--gold);font-weight:700;min-width:32px;}
+    .crop-btns{display:flex;gap:7px;}
+    .crop-rm{background:rgba(255,80,80,0.15);color:var(--danger);border:1px solid rgba(255,80,80,0.3);border-radius:8px;padding:6px 13px;font-size:0.76rem;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+    .crop-rm:hover{background:rgba(255,80,80,0.25);}
+    .crop-ok{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#060e1f;border:none;border-radius:8px;padding:6px 14px;font-size:0.76rem;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+    .crop-ok:hover{opacity:0.88;}
 
     /* POST LIST */
     .post-list{display:flex;flex-direction:column;gap:10px;}
@@ -156,14 +170,7 @@
     .mf select option{background:#0a1a35;}
     .modal-row{display:flex;gap:10px;margin-top:16px;}
     .modal-row .btn{flex:1;padding:12px;justify-content:center;}
-    .edit-zone{width:100%;height:100px;border:2px dashed rgba(255,255,255,0.18);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px;background:rgba(255,255,255,0.02);transition:border-color 0.2s;position:relative;overflow:hidden;}
-    .edit-zone:hover{border-color:rgba(245,200,66,0.5);}
-    .edit-zone .zt{color:var(--muted);font-size:0.76rem;text-align:center;}
-    .edit-zone .zt span{color:var(--gold);}
-    .edit-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;}
-    .edit-prev{width:100%;height:100px;border-radius:10px;overflow:hidden;display:none;border:1px solid var(--border);position:relative;}
-    .edit-prev img{width:100%;height:100%;object-fit:cover;}
-    .edit-prev-rm{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.65);color:#fff;border:none;border-radius:6px;padding:3px 9px;font-size:0.73rem;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+
 
     /* FB BANNER */
     .fb-banner{position:fixed;top:0;left:0;right:0;z-index:9999;padding:10px 20px;text-align:center;font-size:0.82rem;font-weight:600;transition:all 0.4s;}
@@ -259,8 +266,28 @@
           <div class="fg full"><label>Description *</label><textarea id="fDesc" rows="3" placeholder="Describe your service…"></textarea></div>
           <div class="fg full">
             <label>Service Image</label>
-            <div class="img-zone" id="fZone"><div class="plus">＋</div><div class="zt">Click to <span>upload image</span><br>JPG, PNG, WEBP</div><input type="file" id="fFile" accept="image/*" onchange="handleImg(this,'fPrev','fZone','fData')"/></div>
-            <div class="img-prev" id="fPrev"><img id="fPrevImg" src="" alt=""/><button class="img-prev-rm" onclick="clearImg('fPrev','fZone','fFile','fData')">✕ Remove</button></div>
+            <div class="img-zone" id="fZone">
+              <div class="plus">＋</div>
+              <div class="zt">Click to <span>upload image</span><br>JPG, PNG, WEBP</div>
+              <input type="file" id="fFile" accept="image/*" onchange="initCrop(this,'fCropWrap','fZone','fCropImg','fCropSlider','fZvalEl','fData','fCropFrame')"/>
+            </div>
+            <div class="crop-wrap" id="fCropWrap">
+              <div class="crop-frame" id="fCropFrame">
+                <img id="fCropImg" src="" draggable="false"/>
+              </div>
+              <div class="crop-hint">🖱️ <span>Drag</span> to reposition &nbsp;·&nbsp; <span>Slider</span> to zoom</div>
+              <div class="crop-controls">
+                <div class="crop-zoom">
+                  <label>Zoom</label>
+                  <input type="range" id="fCropSlider" min="100" max="300" value="100" oninput="onZoom('fCropImg','fCropSlider','fZvalEl','fCropFrame')"/>
+                  <span class="crop-zval" id="fZvalEl">100%</span>
+                </div>
+                <div class="crop-btns">
+                  <button class="crop-rm" onclick="resetCrop('fCropWrap','fZone','fFile','fData','fCropImg','fCropSlider','fZvalEl','fCropFrame')">✕ Remove</button>
+                  <button class="crop-ok" onclick="confirmCrop('fCropFrame','fCropImg','fData')">✓ Done</button>
+                </div>
+              </div>
+            </div>
             <input type="hidden" id="fData"/>
           </div>
         </div>
@@ -315,8 +342,28 @@
     <div class="mf"><label>Contact</label><input type="text" id="eContact"/></div>
     <div class="mf"><label>Description</label><textarea id="eDesc" rows="3"></textarea></div>
     <div class="mf"><label>Image</label>
-      <div class="edit-zone" id="eZone"><div class="zt">Click to <span>change image</span></div><input type="file" id="eFile" accept="image/*" onchange="handleImg(this,'ePrev','eZone','eData')"/></div>
-      <div class="edit-prev" id="ePrev"><img id="ePrevImg" src="" alt=""/><button class="edit-prev-rm" onclick="clearImg('ePrev','eZone','eFile','eData')">✕</button></div>
+      <div class="img-zone" id="eZone">
+        <div class="plus">＋</div>
+        <div class="zt">Click to <span>change image</span></div>
+        <input type="file" id="eFile" accept="image/*" onchange="initCrop(this,'eCropWrap','eZone','eCropImg','eCropSlider','eZvalEl','eData','eCropFrame')"/>
+      </div>
+      <div class="crop-wrap" id="eCropWrap">
+        <div class="crop-frame" id="eCropFrame">
+          <img id="eCropImg" src="" draggable="false"/>
+        </div>
+        <div class="crop-hint">🖱️ <span>Drag</span> to reposition &nbsp;·&nbsp; <span>Slider</span> to zoom</div>
+        <div class="crop-controls">
+          <div class="crop-zoom">
+            <label>Zoom</label>
+            <input type="range" id="eCropSlider" min="100" max="300" value="100" oninput="onZoom('eCropImg','eCropSlider','eZvalEl','eCropFrame')"/>
+            <span class="crop-zval" id="eZvalEl">100%</span>
+          </div>
+          <div class="crop-btns">
+            <button class="crop-rm" onclick="resetCrop('eCropWrap','eZone','eFile','eData','eCropImg','eCropSlider','eZvalEl','eCropFrame')">✕ Remove</button>
+            <button class="crop-ok" onclick="confirmCrop('eCropFrame','eCropImg','eData')">✓ Done</button>
+          </div>
+        </div>
+      </div>
       <input type="hidden" id="eData"/>
     </div>
     <div class="modal-row">
@@ -579,52 +626,207 @@ function renderUsers() {
 }
 
 /* IMAGE — compress to max 800px wide, quality 0.75, keeps under Firestore 1MB limit */
-function handleImg(input, prevId, zoneId, dataId) {
+/* ══════════════════════════════════════════
+   CROP TOOL — drag to reposition, slider to zoom
+   ══════════════════════════════════════════ */
+
+/* State for active crop */
+var _crop = {
+  imgId:'', frameId:'', dataId:'',
+  scale:1, ox:0, oy:0,
+  dragging:false, startX:0, startY:0
+};
+
+/* 1. Called when file chosen — loads image into crop frame */
+function initCrop(input, wrapId, zoneId, imgId, sliderId, zvalId, dataId, frameId) {
   var file = input.files[0];
   if (!file) return;
-
   var reader = new FileReader();
   reader.onload = function(e) {
-    var original = new Image();
-    original.onload = function() {
-      /* Resize canvas */
-      var MAX = 800;
-      var w = original.width;
-      var h = original.height;
+    var origImg = new Image();
+    origImg.onload = function() {
+      /* Store original in hidden field (compressed) */
+      var MAX = 1200;
+      var w = origImg.width, h = origImg.height;
       if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      var cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(origImg, 0, 0, w, h);
+      var b64 = cv.toDataURL('image/jpeg', 0.85);
+      document.getElementById(dataId).value = b64;
 
-      var canvas = document.createElement('canvas');
-      canvas.width  = w;
-      canvas.height = h;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(original, 0, 0, w, h);
+      /* Show in crop frame */
+      var imgEl = document.getElementById(imgId);
+      imgEl.src = b64;
+      imgEl.style.width  = '';
+      imgEl.style.height = '';
+      imgEl.style.left   = '0px';
+      imgEl.style.top    = '0px';
 
-      /* Compress — try quality 0.75, if still too big try 0.5 */
-      var compressed = canvas.toDataURL('image/jpeg', 0.75);
-      if (compressed.length > 900000) {
-        compressed = canvas.toDataURL('image/jpeg', 0.5);
-      }
-      if (compressed.length > 900000) {
-        compressed = canvas.toDataURL('image/jpeg', 0.35);
-      }
+      /* Reset slider */
+      document.getElementById(sliderId).value = 100;
+      document.getElementById(zvalId).textContent = '100%';
 
-      document.getElementById(dataId).value = compressed;
-      var imgEl = document.getElementById(prevId).querySelector('img');
-      if (imgEl) imgEl.src = compressed;
-      document.getElementById(prevId).style.display = 'block';
+      /* Switch panels */
       document.getElementById(zoneId).style.display = 'none';
+      document.getElementById(wrapId).style.display = 'flex';
+
+      /* Wait for img to paint then fit to frame */
+      setTimeout(function() { fitToFrame(imgId, frameId, sliderId, zvalId); }, 50);
+
+      /* Attach drag events */
+      attachDrag(frameId, imgId, sliderId, zvalId, dataId);
     };
-    original.src = e.target.result;
+    origImg.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
-function clearImg(prevId, zoneId, fileId, dataId) {
-  document.getElementById(prevId).style.display='none';
-  document.getElementById(zoneId).style.display='flex';
-  document.getElementById(dataId).value='';
-  document.getElementById(fileId).value='';
-  var img=document.getElementById(prevId).querySelector('img'); if(img) img.src='';
+
+/* Fit image to fill frame at 100% zoom */
+function fitToFrame(imgId, frameId, sliderId, zvalId) {
+  var frame  = document.getElementById(frameId);
+  var imgEl  = document.getElementById(imgId);
+  var fw = frame.clientWidth, fh = frame.clientHeight;
+  var iw = imgEl.naturalWidth, ih = imgEl.naturalHeight;
+  /* Scale so image fills frame (cover) */
+  var baseScale = Math.max(fw / iw, fh / ih);
+  _crop.baseScale = baseScale;
+  _crop.scale = 1;
+  _crop.ox = 0; _crop.oy = 0;
+  applyTransform(imgId, frameId);
+  /* Center */
+  centerImg(imgId, frameId);
 }
+
+function applyTransform(imgId, frameId) {
+  var frame = document.getElementById(frameId);
+  var imgEl = document.getElementById(imgId);
+  var fw = frame.clientWidth, fh = frame.clientHeight;
+  var iw = imgEl.naturalWidth, ih = imgEl.naturalHeight;
+  var s  = (_crop.baseScale || 1) * _crop.scale;
+  imgEl.style.width  = Math.round(iw * s) + 'px';
+  imgEl.style.height = Math.round(ih * s) + 'px';
+  clampPos(imgId, frameId);
+}
+
+function centerImg(imgId, frameId) {
+  var frame = document.getElementById(frameId);
+  var imgEl = document.getElementById(imgId);
+  var fw = frame.clientWidth, fh = frame.clientHeight;
+  var iw = parseFloat(imgEl.style.width)  || imgEl.clientWidth;
+  var ih = parseFloat(imgEl.style.height) || imgEl.clientHeight;
+  _crop.ox = (fw - iw) / 2;
+  _crop.oy = (fh - ih) / 2;
+  imgEl.style.left = _crop.ox + 'px';
+  imgEl.style.top  = _crop.oy + 'px';
+}
+
+function clampPos(imgId, frameId) {
+  var frame = document.getElementById(frameId);
+  var imgEl = document.getElementById(imgId);
+  var fw = frame.clientWidth, fh = frame.clientHeight;
+  var iw = parseFloat(imgEl.style.width)  || imgEl.clientWidth;
+  var ih = parseFloat(imgEl.style.height) || imgEl.clientHeight;
+  var maxX = 0, minX = fw - iw;
+  var maxY = 0, minY = fh - ih;
+  if (iw <= fw) { _crop.ox = (fw - iw) / 2; }
+  else           { _crop.ox = Math.min(maxX, Math.max(minX, _crop.ox)); }
+  if (ih <= fh) { _crop.oy = (fh - ih) / 2; }
+  else           { _crop.oy = Math.min(maxY, Math.max(minY, _crop.oy)); }
+  imgEl.style.left = _crop.ox + 'px';
+  imgEl.style.top  = _crop.oy + 'px';
+}
+
+/* Zoom slider */
+function onZoom(imgId, sliderId, zvalId, frameId) {
+  _crop.scale = parseFloat(document.getElementById(sliderId).value) / 100;
+  document.getElementById(zvalId).textContent = Math.round(_crop.scale * 100) + '%';
+  applyTransform(imgId, frameId);
+}
+
+/* Drag to reposition */
+function attachDrag(frameId, imgId, sliderId, zvalId, dataId) {
+  var frame = document.getElementById(frameId);
+  /* Remove old listeners by cloning */
+  var newFrame = frame.cloneNode(true);
+  frame.parentNode.replaceChild(newFrame, frame);
+  frame = document.getElementById(frameId);
+
+  function onStart(ex, ey) {
+    _crop.dragging = true;
+    _crop.startX = ex - _crop.ox;
+    _crop.startY = ey - _crop.oy;
+    _crop.imgId = imgId; _crop.frameId = frameId;
+    frame.classList.add('grabbing');
+  }
+  function onMove(ex, ey) {
+    if (!_crop.dragging) return;
+    _crop.ox = ex - _crop.startX;
+    _crop.oy = ey - _crop.startY;
+    clampPos(_crop.imgId, _crop.frameId);
+  }
+  function onEnd() {
+    _crop.dragging = false;
+    frame.classList.remove('grabbing');
+  }
+
+  /* Mouse */
+  frame.addEventListener('mousedown',  function(e){ e.preventDefault(); onStart(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', function(e){ onMove(e.clientX, e.clientY); });
+  window.addEventListener('mouseup',   onEnd);
+  /* Touch */
+  frame.addEventListener('touchstart', function(e){ e.preventDefault(); onStart(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+  frame.addEventListener('touchmove',  function(e){ e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+  frame.addEventListener('touchend',   onEnd);
+}
+
+/* ✓ Done — capture visible area as final image */
+function confirmCrop(frameId, imgId, dataId) {
+  var frame = document.getElementById(frameId);
+  var imgEl = document.getElementById(imgId);
+  var fw = frame.clientWidth, fh = frame.clientHeight;
+  var iw = parseFloat(imgEl.style.width)  || imgEl.clientWidth;
+  var ih = parseFloat(imgEl.style.height) || imgEl.clientHeight;
+  var ox = parseFloat(imgEl.style.left)   || 0;
+  var oy = parseFloat(imgEl.style.top)    || 0;
+
+  var canvas = document.createElement('canvas');
+  canvas.width  = fw * 2; /* 2x for retina */
+  canvas.height = fh * 2;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(imgEl, ox * 2, oy * 2, iw * 2, ih * 2);
+
+  var result = canvas.toDataURL('image/jpeg', 0.82);
+  document.getElementById(dataId).value = result;
+  showToast('✅ Image cropped and saved!');
+}
+
+/* Reset crop / remove image */
+function resetCrop(wrapId, zoneId, fileId, dataId, imgId, sliderId, zvalId, frameId) {
+  document.getElementById(wrapId).style.display  = 'none';
+  document.getElementById(zoneId).style.display  = 'flex';
+  document.getElementById(dataId).value  = '';
+  document.getElementById(fileId).value  = '';
+  document.getElementById(imgId).src     = '';
+  document.getElementById(sliderId).value = 100;
+  document.getElementById(zvalId).textContent = '100%';
+  _crop.scale = 1; _crop.ox = 0; _crop.oy = 0;
+}
+
+/* Used in openEdit to show existing image in crop frame */
+function loadExistingImg(src, wrapId, zoneId, imgId, sliderId, zvalId, dataId, frameId) {
+  if (!src) { document.getElementById(zoneId).style.display='flex'; document.getElementById(wrapId).style.display='none'; return; }
+  document.getElementById(dataId).value = src;
+  var imgEl = document.getElementById(imgId);
+  imgEl.src = src;
+  imgEl.style.width=''; imgEl.style.height=''; imgEl.style.left='0px'; imgEl.style.top='0px';
+  document.getElementById(sliderId).value = 100;
+  document.getElementById(zvalId).textContent = '100%';
+  document.getElementById(zoneId).style.display = 'none';
+  document.getElementById(wrapId).style.display = 'flex';
+  setTimeout(function(){ fitToFrame(imgId, frameId, sliderId, zvalId); attachDrag(frameId, imgId, sliderId, zvalId, dataId); }, 80);
+}
+
 
 /* KEY GEN */
 function genKey(){var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',k='UNI-';for(var i=0;i<4;i++) k+=c[Math.floor(Math.random()*c.length)];return k;}
@@ -650,7 +852,7 @@ async function addPost() {
 function clearForm() {
   document.getElementById('fTitle').value=''; document.getElementById('fPrice').value='';
   document.getElementById('fContact').value=''; document.getElementById('fDesc').value='';
-  document.getElementById('fCat').value='food'; clearImg('fPrev','fZone','fFile','fData');
+  document.getElementById('fCat').value='food'; resetCrop('fCropWrap','fZone','fFile','fData','fCropImg','fCropSlider','fZvalEl','fCropFrame');
 }
 
 /* EDIT */
@@ -666,8 +868,7 @@ function openEdit(docId) {
   document.getElementById('eDesc').value=found.desc;
   document.getElementById('eData').value=found.img||'';
   document.getElementById('eFile').value='';
-  if(found.img){var img=document.getElementById('ePrev').querySelector('img');if(img)img.src=found.img;document.getElementById('ePrev').style.display='block';document.getElementById('eZone').style.display='none';}
-  else{document.getElementById('ePrev').style.display='none';document.getElementById('eZone').style.display='flex';}
+  loadExistingImg(found.img||'','eCropWrap','eZone','eCropImg','eCropSlider','eZvalEl','eData','eCropFrame');
   openOverlay('editOverlay');
 }
 

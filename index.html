@@ -172,7 +172,7 @@
     .modal-row .btn{flex:1;padding:12px;justify-content:center;}
     .err{color:var(--red);font-size:0.81rem;margin-top:8px;display:none;}
     .ok{color:var(--green);font-size:0.82rem;margin-top:8px;display:none;font-weight:600;}
-    .detail-img{width:100%;height:200px;object-fit:cover;border-radius:14px;margin-bottom:16px;display:block;}
+    .detail-img{width:100%;max-height:400px;object-fit:contain;border-radius:14px;margin-bottom:16px;display:block;background:rgba(255,255,255,0.04);cursor:zoom-in;} .lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;} .lightbox.open{display:flex;} .lightbox img{max-width:100%;max-height:92vh;object-fit:contain;border-radius:10px;animation:lbIn 0.22s ease;} @keyframes lbIn{from{opacity:0;transform:scale(0.92);}to{opacity:1;transform:scale(1);}} .lightbox-close{position:absolute;top:18px;right:22px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:1.2rem;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);} .lightbox-close:hover{background:rgba(255,255,255,0.25);}
     .detail-emo{text-align:center;font-size:3rem;margin-bottom:14px;}
     .detail-title{font-size:1.25rem;font-weight:800;margin-bottom:8px;}
     .detail-desc{color:var(--muted);font-size:0.88rem;line-height:1.68;margin-bottom:18px;}
@@ -413,6 +413,12 @@
       <button class="btn btn-gold"  onclick="submitComplaint()">📤 Submit</button>
     </div>
   </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt=""/>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -823,6 +829,23 @@ var _ols = document.querySelectorAll('.overlay');
 for (var _i=0;_i<_ols.length;_i++) {
   _ols[_i].addEventListener('click', function(e) { if(e.target===this) this.classList.remove('open'); });
 }
+
+/* ── LIGHTBOX ── */
+function openLightbox(src) {
+  var lb  = document.getElementById('lightbox');
+  var img = document.getElementById('lightboxImg');
+  img.src = src;
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+/* Close lightbox with Escape key */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
 
 function showToast(msg) {
   var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
