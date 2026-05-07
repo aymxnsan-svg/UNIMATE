@@ -168,6 +168,10 @@
     .field label{display:block;font-size:0.79rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
     .field input,.field select,.field textarea{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.11);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:0.92rem;outline:none;transition:border-color 0.2s,box-shadow 0.2s;resize:vertical;}
     .field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(245,200,66,0.5);box-shadow:0 0 0 3px rgba(245,200,66,0.1);}
+    .pass-wrap{position:relative;}
+    .pass-wrap input{padding-right:44px;}
+    .eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.05rem;padding:4px;line-height:1;transition:color 0.18s;}
+    .eye-btn:hover{color:var(--text);}
     .modal-row{display:flex;gap:10px;margin-top:20px;}
     .modal-row .btn{flex:1;padding:12px;justify-content:center;}
     .err{color:var(--red);font-size:0.81rem;margin-top:8px;display:none;}
@@ -392,7 +396,7 @@
     </div>
     <div id="formLogin">
       <div class="field"><label>Username / Student ID</label><input type="text" id="liUser" placeholder="Your username or ID"/></div>
-      <div class="field"><label>Password</label><input type="password" id="liPass" placeholder="Your password"/></div>
+      <div class="field"><label>Password</label><div class="pass-wrap"><input type="password" id="liPass" placeholder="Your password"/><button type="button" class="eye-btn" onclick="togglePass('liPass',this)">👁️</button></div></div>
       <div class="err" id="liErr">Incorrect credentials. Please try again.</div>
       <div class="modal-row">
         <button class="btn btn-glass" onclick="closeOverlay('authOverlay')">Cancel</button>
@@ -403,7 +407,7 @@
       <div class="field"><label>Full Name</label><input type="text" id="suName" placeholder="Your full name"/></div>
       <div class="field"><label>IC Number / Student ID</label><input type="text" id="suIc" placeholder="e.g. 980101-01-1234 or STU12345"/></div>
       <div class="field"><label>Username</label><input type="text" id="suUser" placeholder="Choose a username (no spaces)"/></div>
-      <div class="field"><label>Password</label><input type="password" id="suPass" placeholder="Min 6 characters"/></div>
+      <div class="field"><label>Password</label><div class="pass-wrap"><input type="password" id="suPass" placeholder="Min 6 characters"/><button type="button" class="eye-btn" onclick="togglePass('suPass',this)">👁️</button></div></div>
       <div class="err" id="suErr"></div>
       <div class="ok"  id="suOk">Account created! Logging you in…</div>
       <div class="modal-row">
@@ -413,7 +417,7 @@
     </div>
     <div id="formAdmin" style="display:none">
       <div class="field"><label>Admin Username</label><input type="text" id="adUser" placeholder="admin"/></div>
-      <div class="field"><label>Admin Password</label><input type="password" id="adPass" placeholder="Password"/></div>
+      <div class="field"><label>Admin Password</label><div class="pass-wrap"><input type="password" id="adPass" placeholder="Password"/><button type="button" class="eye-btn" onclick="togglePass('adPass',this)">👁️</button></div></div>
       <div class="err" id="adErr">Incorrect admin credentials.</div>
       <div class="modal-row">
         <button class="btn btn-glass" onclick="closeOverlay('authOverlay')">Cancel</button>
@@ -857,6 +861,14 @@ async function checkInboxDot() {
   else             { document.getElementById('inboxDot').classList.remove('show'); }
 }
 
+/* ── PASSWORD TOGGLE ── */
+function togglePass(inputId, btn) {
+  var input = document.getElementById(inputId);
+  var show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁️';
+}
+
 /* ── OVERLAY ── */
 function openOverlay(id)  { document.getElementById(id).classList.add('open'); }
 function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
@@ -925,23 +937,21 @@ function runCounters(total) {
   if (_countersRan) return;
   _countersRan = true;
   function animateCount(el, target, suffix, duration) {
-    var startTime = null;
-    function step(ts) {
-      if (!startTime) startTime = ts;
-      var progress = Math.min((ts - startTime) / duration, 1);
-      var eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = Math.floor(eased * target) + suffix;
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
+    if (target <= 0) return;
+    var start = Date.now();
+    var timer = setInterval(function() {
+      var progress = Math.min((Date.now() - start) / duration, 1);
+      el.textContent = Math.round(progress * target) + suffix;
+      if (progress >= 1) clearInterval(timer);
+    }, 16);
   }
-  animateCount(document.getElementById('statServices'), total, '+', 1400);
+  animateCount(document.getElementById('statServices'), total, '+', 700);
   document.querySelectorAll('.strip-val').forEach(function(sv) {
     if (sv.id === 'statServices') return;
     var txt = sv.textContent.trim();
     var match = txt.match(/^(\d+)/);
     if (!match) return;
-    animateCount(sv, parseInt(match[1]), txt.slice(match[1].length), 1000);
+    animateCount(sv, parseInt(match[1]), txt.slice(match[1].length), 600);
   });
 }
 
