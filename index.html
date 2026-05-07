@@ -187,9 +187,41 @@
     footer{position:relative;z-index:1;border-top:1px solid var(--border);text-align:center;padding:26px;color:var(--muted);font-size:0.81rem;}
     footer b{background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
     @media(max-width:768px){nav{padding:14px 20px;}.hero{padding:60px 20px 40px;}.cat-section{padding:0 20px 32px;}.search-wrap{padding:0 20px;}.notice-bar{margin:0 20px 20px;}.main{padding:0 20px 60px;}.static-page{padding:40px 20px 60px;}.inbox-wrap{padding:36px 20px 60px;}.contact-grid{grid-template-columns:1fr;}.grid{grid-template-columns:1fr;}.modal{padding:26px 20px;}.strip-item{padding:16px 20px;}}
+
+    /* ── Splash Screen ── */
+    #splash{position:fixed;inset:0;background:#060e1f;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.7s ease,visibility 0.7s;}
+    #splash.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+    .splash-logo{font-size:3.2rem;font-weight:800;background:linear-gradient(135deg,#fff 30%,#f5c842);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:splashPop 0.7s cubic-bezier(0.34,1.56,0.64,1) both;}
+    .splash-sub{color:rgba(180,210,255,0.55);font-size:0.88rem;margin-top:10px;letter-spacing:0.5px;animation:splashPop 0.7s 0.18s cubic-bezier(0.34,1.56,0.64,1) both;opacity:0;}
+    .splash-bar{width:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:100px;margin-top:36px;animation:splashGrow 1s 0.4s ease forwards;}
+    @keyframes splashPop{from{opacity:0;transform:scale(0.78) translateY(14px);}to{opacity:1;transform:scale(1) translateY(0);}}
+    @keyframes splashGrow{from{width:0;opacity:0;}to{width:64px;opacity:1;}}
+
+    /* ── Typing cursor ── */
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+
+    /* ── Scroll reveal ── */
+    .sr{opacity:0;transform:translateY(22px);transition:opacity 0.55s ease,transform 0.55s ease;}
+    .sr.visible{opacity:1;transform:translateY(0);}
+
+    /* ── Back to top ── */
+    #backToTop{position:fixed;bottom:82px;right:28px;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;color:#060e1f;font-size:1.1rem;font-weight:800;cursor:pointer;z-index:996;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(245,200,66,0.35);opacity:0;transform:translateY(16px);transition:opacity 0.3s,transform 0.3s;pointer-events:none;}
+    #backToTop.show{opacity:1;transform:translateY(0);pointer-events:all;}
+    #backToTop:hover{transform:translateY(-4px);box-shadow:0 8px 26px rgba(245,200,66,0.5);}
+
+    /* ── Toast types ── */
+    .toast.success{background:linear-gradient(135deg,#4ade80,#22c55e);color:#052e16;box-shadow:0 8px 28px rgba(74,222,128,0.4);}
+    .toast.error{background:linear-gradient(135deg,#ff6b6b,#ef4444);color:#fff;box-shadow:0 8px 28px rgba(255,107,107,0.4);}
   </style>
 </head>
 <body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="splash-logo">Unimate</div>
+  <div class="splash-sub">🎓 Perlis Student Marketplace</div>
+  <div class="splash-bar"></div>
+</div>
 
 <div class="fb-banner connecting" id="fbBanner">🔄 Connecting to Firebase…</div>
 
@@ -422,6 +454,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<button type="button" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
 
 <!-- ═══════════ FIREBASE SDK (module) ═══════════ -->
 <script type="module">
@@ -551,6 +584,7 @@ function render() {
 
   label.textContent = filtered.length + ' service' + (filtered.length!==1?'s':'');
   document.getElementById('statServices').textContent = posts.length + '+';
+  runCounters(posts.length);
 
   if (!filtered.length) {
     grid.innerHTML = '<div class="empty"><div class="emo">🔍</div><p>No services found.</p></div>';
@@ -579,6 +613,7 @@ function render() {
     html += '</div></div>';
   }
   grid.innerHTML = html;
+  setupCardReveal();
 }
 
 function setCategory(cat, btn) {
@@ -674,7 +709,7 @@ async function doSignup() {
   setTimeout(function() {
     closeOverlay('authOverlay');
     setLoggedIn({username:uname, name:name, ic:ic});
-    showToast('Welcome to Unimate, ' + name + '!');
+    showToast('Welcome to Unimate, ' + name + '!', 'success');
   }, 1200);
 }
 
@@ -690,7 +725,7 @@ async function doLogin() {
     var usr = d.data(); usr._docId = d.id;
     if (usr.username===u || usr.ic===u) found = usr;
   });
-  if (found) { closeOverlay('authOverlay'); setLoggedIn(found); showToast('Welcome back, ' + found.name + '!'); return; }
+  if (found) { closeOverlay('authOverlay'); setLoggedIn(found); showToast('Welcome back, ' + found.name + '!', 'success'); return; }
   document.getElementById('liErr').style.display='block';
 }
 
@@ -699,7 +734,7 @@ function doAdminLogin() {
   var p = document.getElementById('adPass').value.trim();
   document.getElementById('adErr').style.display='none';
   if (u==='admin' && p==='unimate123') {
-    closeOverlay('authOverlay'); showToast('Welcome, Admin!');
+    closeOverlay('authOverlay'); showToast('Welcome, Admin!', 'success');
     setTimeout(function(){window.location.href='admin.html';},900); return;
   }
   document.getElementById('adErr').style.display='block';
@@ -759,7 +794,7 @@ async function submitComplaint() {
     message:msg, date:dateStr, status:'pending', reply:'', readByUser:false,
     createdAt: FS.serverTimestamp()
   });
-  okEl.style.display='block'; showToast('Complaint submitted!');
+  okEl.style.display='block'; showToast('Complaint submitted!', 'success');
   setTimeout(function(){closeOverlay('complaintOverlay');}, 2000);
 }
 
@@ -847,10 +882,109 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox();
 });
 
-function showToast(msg) {
-  var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show');},3500);
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3500);
 }
+
+/* ── SPLASH SCREEN ── */
+(function() {
+  var splash = document.getElementById('splash');
+  setTimeout(function() {
+    splash.classList.add('hidden');
+    setTimeout(startTyping, 500);
+  }, 1900);
+})();
+
+/* ── TYPING EFFECT ── */
+function startTyping() {
+  var h1 = document.querySelector('#pageHome .hero h1');
+  if (!h1) return;
+  var line1 = 'Your campus,';
+  var line2 = 'your community.';
+  var tokens = line1.split('').concat(['__BR__']).concat(line2.split(''));
+  h1.innerHTML = '';
+  var built = '';
+  var idx = 0;
+  function tick() {
+    if (idx >= tokens.length) { h1.innerHTML = built; return; }
+    var t = tokens[idx++];
+    built += (t === '__BR__') ? '<br>' : t;
+    h1.innerHTML = built + '<span style="border-right:3px solid var(--gold);margin-left:1px;display:inline-block;animation:blink 0.7s infinite"> </span>';
+    setTimeout(tick, t === '__BR__' ? 220 : 46);
+  }
+  tick();
+}
+
+/* ── NUMBER COUNTER ── */
+var _countersRan = false;
+function runCounters(total) {
+  if (_countersRan) return;
+  _countersRan = true;
+  function animateCount(el, target, suffix, duration) {
+    var startTime = null;
+    function step(ts) {
+      if (!startTime) startTime = ts;
+      var progress = Math.min((ts - startTime) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.floor(eased * target) + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  animateCount(document.getElementById('statServices'), total, '+', 1400);
+  document.querySelectorAll('.strip-val').forEach(function(sv) {
+    if (sv.id === 'statServices') return;
+    var txt = sv.textContent.trim();
+    var match = txt.match(/^(\d+)/);
+    if (!match) return;
+    animateCount(sv, parseInt(match[1]), txt.slice(match[1].length), 1000);
+  });
+}
+
+/* ── SCROLL REVEAL ── */
+(function() {
+  if (!('IntersectionObserver' in window)) return;
+  document.querySelectorAll('.info-card,.contact-card,.wa-cta,.static-section').forEach(function(el) {
+    el.classList.add('sr');
+  });
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.sr').forEach(function(el) { obs.observe(el); });
+})();
+
+/* ── CARD SCROLL REVEAL (called after render) ── */
+function setupCardReveal() {
+  if (!('IntersectionObserver' in window)) return;
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.style.animationPlayState = 'running';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05 });
+  document.querySelectorAll('#grid .card').forEach(function(card) {
+    var rect = card.getBoundingClientRect();
+    if (rect.top > window.innerHeight) {
+      card.style.animationPlayState = 'paused';
+      obs.observe(card);
+    }
+  });
+}
+
+/* ── BACK TO TOP ── */
+window.addEventListener('scroll', function() {
+  var btn = document.getElementById('backToTop');
+  if (window.scrollY > 320) btn.classList.add('show');
+  else btn.classList.remove('show');
+}, { passive: true });
 </script>
 </body>
 </html>
