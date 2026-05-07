@@ -190,7 +190,8 @@
     .toast.show{opacity:1;transform:translateY(0);}
     footer{position:relative;z-index:1;border-top:1px solid var(--border);text-align:center;padding:26px;color:var(--muted);font-size:0.81rem;}
     footer b{background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    @media(max-width:768px){nav{padding:14px 20px;}.hero{padding:60px 20px 40px;}.cat-section{padding:0 20px 32px;}.search-wrap{padding:0 20px;}.notice-bar{margin:0 20px 20px;}.main{padding:0 20px 60px;}.static-page{padding:40px 20px 60px;}.inbox-wrap{padding:36px 20px 60px;}.contact-grid{grid-template-columns:1fr;}.grid{grid-template-columns:1fr;}.modal{padding:26px 20px;}.strip-item{padding:16px 20px;}}
+    @media(max-width:768px){nav{padding:14px 20px;}.hero{padding:60px 20px 40px;}.cat-section{padding:0 20px 32px;}.search-wrap{padding:0 20px;}.notice-bar{margin:0 20px 20px;}.main{padding:0 20px 60px;}.static-page{padding:40px 20px 60px;}.inbox-wrap{padding:36px 20px 60px;}.contact-grid{grid-template-columns:1fr;}.grid{grid-template-columns:1fr;}.modal{padding:26px 20px;}.strip-item{padding:16px 20px;}
+    .nav-right{gap:6px;}.nav-logged{gap:6px;}.inbox-text{display:none;}.nav-username{display:none;}.inbox-btn{padding:8px 10px;}.logout-btn{padding:6px 12px;font-size:0.78rem;}}
 
     /* ── Splash Screen ── */
     #splash{position:fixed;inset:0;background:#060e1f;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.7s ease,visibility 0.7s;}
@@ -244,10 +245,10 @@
         <button class="btn btn-gold"  onclick="openAuthModal('signup')">Sign Up</button>
       </div>
       <div class="nav-logged" id="navLogged">
-        <button class="inbox-btn" onclick="showPage('inbox')">📬 Inbox<span class="inbox-dot" id="inboxDot"></span></button>
+        <button class="inbox-btn" onclick="showPage('inbox')">📬<span class="inbox-text"> Inbox</span><span class="inbox-dot" id="inboxDot"></span></button>
         <div class="nav-avatar" id="navAvatar">U</div>
         <span class="nav-username" id="navUsername"></span>
-        <button class="btn btn-glass btn-sm" onclick="doLogout()">Log Out</button>
+        <button class="btn btn-glass btn-sm logout-btn" onclick="doLogout()">Log Out</button>
       </div>
     </div>
   </nav>
